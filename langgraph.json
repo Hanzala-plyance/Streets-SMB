@@ -1,0 +1,9 @@
+{
+  "$schema": "https://langgra.ph/schema.json",
+  "dependencies": ["."],
+  "graphs": {
+    "browser_agent": "./streets_agent/graph.py:graph"
+  },
+  "env": ".env"
+}
+

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Streets — Review before action</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #18211d;
+        --muted: #67736d;
+        --line: #dfe6e1;
+        --paper: #ffffff;
+        --canvas: #f2f5f1;
+        --accent: #236b4e;
+        --accent-soft: #e5f2eb;
+        --ring: rgba(35, 107, 78, 0.18);
+      }
+      body[data-state="starting"], body[data-state="filling"] { --accent: #2867db; --accent-soft: #e9f0ff; --ring: rgba(40, 103, 219, 0.17); }
+      body[data-state="paused"] { --accent: #b26609; --accent-soft: #fff0d5; --ring: rgba(178, 102, 9, 0.17); }
+      body[data-state="submitting"], body[data-state="done"] { --accent: #147a4b; --accent-soft: #ddf5e8; --ring: rgba(20, 122, 75, 0.17); }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; background: var(--canvas); color: var(--ink); font-family: "DM Sans", sans-serif; transition: background .25s ease; }
+      button { font: inherit; }
+      .shell { width: min(1500px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 48px; }
+      header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+      .brand { display: flex; align-items: center; gap: 11px; font-family: Manrope, sans-serif; font-weight: 700; letter-spacing: -.02em; }
+      .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; color: white; border-radius: 10px; background: #163d2c; box-shadow: 0 5px 16px rgba(22,61,44,.16); }
+      .eyebrow { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+      .header-note { color: var(--muted); font-size: 13px; }
+      main { display: grid; grid-template-columns: minmax(310px, 390px) minmax(0, 1fr); gap: 24px; align-items: start; }
+      .left { display: grid; gap: 16px; }
+      .card, .browser-wrap { border: 1px solid var(--line); background: var(--paper); box-shadow: 0 12px 32px rgba(41,55,48,.06); }
+      .card { border-radius: 18px; padding: 22px; }
+      h1 { margin: 8px 0 14px; max-width: 330px; font: 700 29px/1.12 Manrope, sans-serif; letter-spacing: -.045em; }
+      .task { margin: 0 0 20px; color: #35413b; font-size: 15px; line-height: 1.55; }
+      .target { display: flex; gap: 9px; align-items: center; min-width: 0; padding: 10px 12px; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 11px; background: #f8faf8; color: var(--muted); font-size: 12px; }
+      .target select { min-width: 0; width: 100%; border: 0; outline: 0; color: var(--muted); background: transparent; font: inherit; }
+      .instruction { width: 100%; margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; background: #f8faf8; color: var(--ink); font: inherit; font-size: 13px; resize: vertical; }
+      .field-value { width: 100%; margin-bottom: 12px; padding: 10px 12px; border: 1px solid #e1c48e; border-radius: 11px; background: #fffefb; color: var(--ink); font: inherit; font-size: 13px; }
+      .field-value[hidden] { display: none; }
+      .primary, .approve, .ghost { border: 0; border-radius: 11px; cursor: pointer; font-weight: 700; transition: transform .16s, opacity .16s, box-shadow .16s; }
+      .primary { width: 100%; padding: 13px 16px; color: white; background: #163d2c; box-shadow: 0 7px 18px rgba(22,61,44,.2); }
+      button:hover:not(:disabled) { transform: translateY(-1px); }
+      button:disabled { cursor: not-allowed; opacity: .48; }
+      .ticker-card { padding-bottom: 14px; }
+      .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-weight: 700; font-size: 14px; }
+      .count { color: var(--muted); font-size: 12px; font-weight: 600; }
+      #steps { list-style: none; padding: 0; margin: 0; max-height: 280px; overflow: auto; }
+      .step { position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 9px; padding: 8px 0; color: #3e4a44; font-size: 13px; }
+      .step::before { content: "✓"; display: grid; place-items: center; width: 18px; height: 18px; margin-top: 1px; color: white; background: var(--accent); border-radius: 50%; font-size: 10px; font-weight: 700; }
+      .step.inflight::before { content: ""; border: 2px solid var(--accent-soft); border-top-color: var(--accent); background: transparent; animation: spin .7s linear infinite; }
+      .step strong { display: block; color: var(--ink); font-weight: 600; }
+      .step small { display: block; margin-top: 2px; color: var(--muted); word-break: break-word; }
+      .empty { padding: 22px 0; color: var(--muted); font-size: 13px; text-align: center; }
+      .pause-bar { display: none; position: fixed; inset: 0; z-index: 20; place-items: center; padding: 20px; background: rgba(19, 31, 25, .52); backdrop-filter: blur(5px); }
+      .pause-bar.visible { display: grid; animation: fade .18s ease; }
+      .pause-bar.browser-help { inset: auto auto 20px 20px; width: min(350px, calc(100% - 40px)); padding: 0; background: transparent; backdrop-filter: none; }
+      .browser-help .hitl-dialog { width: 100%; }
+      .hitl-dialog { width: min(470px, 100%); border-color: #efcf9d; background: #fffaf0; box-shadow: 0 24px 80px rgba(13, 27, 20, .26); animation: rise .25s ease; }
+      .hitl-dialog h2 { margin: 8px 0 0; font: 700 22px/1.2 Manrope, sans-serif; letter-spacing: -.025em; }
+      .pause-bar p { margin: 10px 0 18px; color: #6b4b1d; font-size: 14px; line-height: 1.52; }
+      .field-wrap label { display: block; margin-bottom: 7px; color: #654d2c; font-size: 12px; font-weight: 700; }
+      .actions { display: flex; gap: 9px; }
+      .approve { flex: 1; padding: 11px 12px; color: white; background: #18784c; }
+      .ghost { padding: 11px 14px; border: 1px solid #dac9ae; color: #654d2c; background: transparent; }
+      .result { display: none; }
+      .result.visible { display: block; animation: rise .25s ease; }
+      .result h2 { margin: 7px 0 15px; font: 700 20px Manrope, sans-serif; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      th { padding: 7px 8px; color: var(--muted); font-weight: 600; text-align: left; border-bottom: 1px solid var(--line); }
+      td { padding: 8px; vertical-align: top; border-bottom: 1px solid #edf1ee; word-break: break-word; }
+      tr.changed td { background: #fff8e8; }
+      details { margin-top: 14px; }
+      summary { cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 700; }
+      pre { max-height: 230px; overflow: auto; padding: 12px; border-radius: 10px; background: #152019; color: #cfebd9; font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+      .browser-wrap { overflow: hidden; border-radius: 18px; box-shadow: 0 20px 50px rgba(41,55,48,.1); }
+      .chrome { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; align-items: center; gap: 13px; height: 51px; padding: 0 14px; border-bottom: 1px solid var(--line); background: #fafbfa; }
+      .dots { display: flex; gap: 6px; }
+      .dots i { width: 9px; height: 9px; border-radius: 50%; background: #d5dcd8; }
+      .address { min-width: 0; padding: 7px 11px; border: 1px solid #e1e6e3; border-radius: 8px; color: #68736d; background: white; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .status { display: flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; color: var(--accent); background: var(--accent-soft); font-size: 11px; font-weight: 700; transition: color .2s, background .2s; }
+      .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px var(--ring); }
+      .viewport { position: relative; aspect-ratio: 16 / 10; background: #e9edea; }
+      iframe { display: none; width: 100%; height: 100%; border: 0; background: white; }
+      iframe.active { display: block; }
+      .browser-empty, .ended { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+      .browser-empty div { max-width: 290px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+      .browser-empty svg { display: block; margin: 0 auto 14px; color: #a5b0aa; }
+      .ended { display: none; background: rgba(240,244,241,.9); backdrop-filter: blur(3px); color: #526059; font-size: 13px; font-weight: 700; }
+      .ended.visible { display: grid; }
+      .toast { position: fixed; left: 50%; bottom: 24px; z-index: 10; max-width: min(520px, calc(100% - 30px)); transform: translate(-50%, 20px); padding: 11px 15px; border-radius: 10px; color: white; background: #8c2f2f; box-shadow: 0 10px 28px rgba(0,0,0,.18); opacity: 0; pointer-events: none; transition: .2s; font-size: 13px; }
+      .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+      @keyframes rise { from { opacity: 0; transform: translateY(5px); } }
+      @keyframes fade { from { opacity: 0; } }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (max-width: 900px) { .shell { width: min(100% - 24px, 720px); padding-top: 20px; } main { grid-template-columns: 1fr; } .right { grid-row: 1; } .header-note { display: none; } }
+    </style>
+  </head>
+  <body data-state="idle">
+    <div class="shell">
+      <header>
+        <div class="brand"><span class="brand-mark">S</span> Streets <span class="eyebrow">Act preview</span></div>
+        <div class="header-note">A human stays in control of the final action.</div>
+      </header>
+      <main>
+        <section class="left">
+          <article class="card">
+            <div class="eyebrow">Agent task</div>
+            <h1>Tell the agent what to do.</h1>
+            <textarea id="instruction" class="instruction" rows="3" placeholder="e.g. Search Google for Instagram and open their homepage">Search Google for Instagram and open their homepage</textarea>
+            <label class="target" title="Starting page">↗
+              <select id="target-url" aria-label="Starting page">
+                <option value="">Configured start page</option>
+                <option value="demo://pizza-form">Built-in HITL form demo</option>
+              </select>
+            </label>
+            <button class="primary" id="start">Run agent</button>
+          </article>
+
+          <article class="card ticker-card">
+            <div class="section-title">Agent activity <span class="count" id="step-count">Waiting</span></div>
+            <ol id="steps"><li class="empty">Browser tool calls will appear here as the agent works.</li></ol>
+          </article>
+
+          <article class="card result" id="result">
+            <div class="eyebrow">Run complete</div>
+            <h2 id="result-title">Submitted</h2>
+            <table>
+              <thead><tr><th>Field</th><th>Draft</th><th>Final</th></tr></thead>
+              <tbody id="readback"></tbody>
+            </table>
+            <details><summary>Server received</summary><pre id="echo"></pre></details>
+            <details><summary>Run log</summary><pre id="run-log"></pre></details>
+          </article>
+        </section>
+
+        <section class="right">
+          <div class="browser-wrap">
+            <div class="chrome">
+              <div class="dots"><i></i><i></i><i></i></div>
+              <div class="address" id="address">Waiting for a session…</div>
+              <div class="status" id="status">Ready</div>
+            </div>
+            <div class="viewport">
+              <div class="browser-empty" id="browser-empty"><div>
+                <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><rect x="4.5" y="7.5" width="35" height="29" rx="5.5" stroke="currentColor"/><path d="M5 15h34M11 11.5h.01M16 11.5h.01" stroke="currentColor" stroke-linecap="round"/></svg>
+                The hosted browser will appear here. You can interact with it when the agent pauses.
+              </div></div>
+              <iframe id="live-view" title="Browserbase live browser" allow="clipboard-read; clipboard-write"></iframe>
+              <div class="ended" id="ended">Session ended</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="pause-bar" id="pause-bar" role="dialog" aria-modal="true" aria-labelledby="hitl-title">
+      <article class="card hitl-dialog">
+        <div class="eyebrow" id="hitl-eyebrow">Agent needs your input</div>
+        <h2 id="hitl-title">The agent needs information</h2>
+        <p id="hitl-message">What should the agent put in this field?</p>
+        <div class="field-wrap" id="field-wrap">
+          <label for="field-value" id="field-label">Value</label>
+          <input type="text" id="field-value" class="field-value" autocomplete="off" />
+          <select id="field-choice" class="field-value" hidden></select>
+        </div>
+        <div class="actions">
+          <button class="approve" id="confirm" disabled>Use this value</button>
+          <button class="ghost" id="cancel" disabled>Stop run</button>
+        </div>
+      </article>
+    </div>
+    <div class="toast" id="toast" role="alert"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

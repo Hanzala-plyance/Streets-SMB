@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pizza order test form</title>
+    <style>
+      body { margin: 0; background: #f5f7f5; color: #18211d; font: 16px/1.45 system-ui, sans-serif; }
+      main { width: min(680px, calc(100% - 32px)); margin: 32px auto; padding: 30px; border: 1px solid #dce4de; border-radius: 16px; background: white; box-shadow: 0 12px 34px rgba(30,50,40,.08); }
+      h1 { margin-top: 0; } fieldset { margin: 18px 0; border: 1px solid #dce4de; border-radius: 10px; }
+      label { display: block; margin: 14px 0; } input:not([type=radio]):not([type=checkbox]), textarea { display: block; width: 100%; margin-top: 5px; padding: 9px; border: 1px solid #becbc3; border-radius: 7px; font: inherit; box-sizing: border-box; }
+      .choice label { display: inline-block; margin-right: 16px; } button { padding: 11px 18px; border: 0; border-radius: 8px; color: white; background: #176b48; font: 700 15px system-ui; }
+      pre { display: none; padding: 16px; border-radius: 8px; background: #172019; color: #d9efe1; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body><main>
+    <h1>Pizza order</h1>
+    <form id="pizza-form">
+      <label>Customer name<input name="custname" autocomplete="name" required /></label>
+      <label>Telephone<input name="custtel" type="tel" autocomplete="tel" required /></label>
+      <label>E-mail<input name="custemail" type="email" autocomplete="email" required /></label>
+      <fieldset class="choice"><legend>Pizza size</legend>
+        <label><input type="radio" name="size" value="small" required /> Small</label>
+        <label><input type="radio" name="size" value="medium" /> Medium</label>
+        <label><input type="radio" name="size" value="large" /> Large</label>
+      </fieldset>
+      <fieldset class="choice"><legend>Toppings</legend>
+        <label><input type="checkbox" name="topping" value="bacon" /> Bacon</label>
+        <label><input type="checkbox" name="topping" value="cheese" /> Extra cheese</label>
+        <label><input type="checkbox" name="topping" value="onion" /> Onion</label>
+        <label><input type="checkbox" name="topping" value="mushroom" /> Mushroom</label>
+      </fieldset>
+      <label>Delivery time<input name="delivery" type="time" required /></label>
+      <label>Comments<textarea name="comments" rows="4"></textarea></label>
+      <button type="submit">Submit order</button>
+    </form>
+    <pre id="submission-result"></pre>
+  </main>
+  <script>
+    document.querySelector("#pizza-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const fields = Object.fromEntries(Array.from(new Set(form.keys())).map((key) => {
+        const values = form.getAll(key);
+        return [key, values.length > 1 ? values : values[0]];
+      }));
+      const result = document.querySelector("#submission-result");
+      result.textContent = JSON.stringify({ form: fields }, null, 2);
+      result.style.display = "block";
+      event.currentTarget.style.display = "none";
+    });
+  </script>
+  </body>
+</html>

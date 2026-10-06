@@ -1,0 +1,12 @@
+{
+  "name": "streets-python-langgraph-browser-agent",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "dev": ".venv/bin/uvicorn streets_agent.server:app --reload --port 3000",
+    "start": ".venv/bin/uvicorn streets_agent.server:app --port 3000",
+    "graph": ".venv/bin/langgraph dev --port 2024",
+    "test": ".venv/bin/pytest -q",
+    "lint": ".venv/bin/ruff check streets_agent tests"
+  }
+}
